@@ -20,7 +20,7 @@ func main() {
 		port = "8080"
 	}
 
-	clashApiKey := os.Getenv("CLASH_ROYALE_KEY")
+	clashApiKey := os.Getenv("CLASH_API_KEY")
 	if clashApiKey == "" {
 		log.Fatalln("you need clash royale api key to start this")
 	}
