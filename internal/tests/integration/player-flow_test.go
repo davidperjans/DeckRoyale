@@ -64,7 +64,7 @@ func TestPlayerFlow(t *testing.T) {
 	cardRepo := &fakeCardRepository{}
 	api.RegisterRoutes(r, clashSvc, aiSvc, cardRepo)
 
-	req, _ := http.NewRequest("GET", "/player/%23TEST", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/player/%23TEST", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
