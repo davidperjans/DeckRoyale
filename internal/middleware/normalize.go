@@ -10,7 +10,7 @@ var rarityOffsets = map[string]int{
 	"champion":  10,
 }
 
-func NormalizeCards(cards []types.Card) []types.Card {
+func NormalizeUsersCards(cards []types.Card) []types.Card {
 	for i := range cards {
 		offset, ok := rarityOffsets[cards[i].Rarity]
 		if ok {
