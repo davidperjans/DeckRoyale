@@ -20,6 +20,5 @@ jobs:
         run: go mod tidy
       - name: Run tests
         env:
-          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
-          CLASH_ROYALE_KEY: ${{ secrets.CLASH_API_KEY }}
+          SECRETS: ${{ secrets.secrets }}
         run: go test ./... -v
