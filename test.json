@@ -1,0 +1,68 @@
+{
+    "cards": [
+            {
+                "id": 26000021,
+                "name": "Hog Rider",
+                "level": 10,
+                "rarity": "Rare",
+                "type": "",
+                "elixirCost": 4
+            },
+            {
+                "id": 28000000,
+                "name": "Fireball",
+                "level": 8,
+                "rarity": "Rare",
+                "type": "",
+                "elixirCost": 4
+            },
+            {
+                "id": 26000041,
+                "name": "Goblin Gang",
+                "level": 12,
+                "rarity": "Common",
+                "type": "",
+                "elixirCost": 3
+            },
+            {
+                "id": 26000000,
+                "name": "Knight",
+                "level": 11,
+                "rarity": "Common",
+                "type": "",
+                "elixirCost": 3
+            },
+            {
+                "id": 26000016,
+                "name": "Prince",
+                "level": 6,
+                "rarity": "Epic",
+                "type": "",
+                "elixirCost": 5
+            },
+            {
+                "id": 28000012,
+                "name": "Tornado",
+                "level": 5,
+                "rarity": "Epic",
+                "type": "",
+                "elixirCost": 3
+            },
+            {
+                "id": 26000056,
+                "name": "Skeleton Barrel",
+                "level": 11,
+                "rarity": "Common",
+                "type": "",
+                "elixirCost": 3
+            },
+            {
+                "id": 28000008,
+                "name": "Zap",
+                "level": 12,
+                "rarity": "Common",
+                "type": "",
+                "elixirCost": 2
+            }
+    ]
+}
