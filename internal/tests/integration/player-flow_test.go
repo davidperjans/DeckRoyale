@@ -14,6 +14,10 @@ import (
 
 type fakeClashService struct{}
 
+func (f *fakeClashService) GetCards() ([]types.Card, error) {
+	return []types.Card{}, nil
+}
+
 func (f *fakeClashService) GetPlayer(playerTag string) (*types.User, error) {
 	user := &types.User{
 		Tag:      playerTag,
@@ -27,7 +31,7 @@ func (f *fakeClashService) GetPlayer(playerTag string) (*types.User, error) {
 		},
 	}
 
-	user.Cards = middleware.NormalizeCards(user.Cards)
+	user.Cards = middleware.NormalizeUsersCards(user.Cards)
 
 	return user, nil
 }
@@ -38,15 +42,29 @@ func (f *fakeAI) GenerateDeck(cards []types.Card, strategy types.StrategyName, p
 	return types.Deck{Cards: cards[:8]}, nil
 }
 
+type fakeCardRepository struct{}
+
+func (f *fakeCardRepository) InsertCards(cards []types.Card) error {
+	return nil
+}
+
+func (f *fakeCardRepository) GetAllCards() ([]types.Card, error) {
+	return []types.Card{
+		{ID: 26000000, Name: "Knight", ElixirCost: 3, Rarity: "Common"},
+		{ID: 26000055, Name: "Mega Knight", ElixirCost: 7, Rarity: "Legendary"},
+	}, nil
+}
+
 func TestPlayerFlow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	r := gin.Default()
 	clashSvc := &fakeClashService{}
 	aiSvc := &fakeAI{}
-	api.RegisterRoutes(r, clashSvc, aiSvc)
+	cardRepo := &fakeCardRepository{}
+	api.RegisterRoutes(r, clashSvc, aiSvc, cardRepo)
 
-	req, _ := http.NewRequest("GET", "/player/%23TEST", nil)
+	req, _ := http.NewRequest("GET", "/api/v1/player/%23TEST", nil)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 

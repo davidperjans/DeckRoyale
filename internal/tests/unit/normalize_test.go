@@ -22,7 +22,7 @@ func TestNormalizeCards(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := middleware.NormalizeCards([]types.Card{tt.input})
+			result := middleware.NormalizeUsersCards([]types.Card{tt.input})
 			if result[0].Level != tt.expected {
 				t.Errorf("got %d, want %d", result[0].Level, tt.expected)
 			}

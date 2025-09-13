@@ -9,8 +9,9 @@ type DeckSuitabilityResult struct {
 
 func CheckDeckSuitability(deck types.Deck, strategy types.StrategyName) (ok bool, warning string) {
 	avg := deck.AvgElixir
+
 	switch strategy {
-	case types.Cycle:
+	case types.CycleStrategy:
 		if avg > 3.3 || avg < 2.5 {
 			return false, "Your deck's average elixir is not optimal for cycle (should be 2.5-3.3). Consider leveling up more cheap cards."
 		}
@@ -19,7 +20,8 @@ func CheckDeckSuitability(deck types.Deck, strategy types.StrategyName) (ok bool
 				return false, "Your deck contains high-cost cards, which are not suitable for cycle. Consider leveling up more cheap cards."
 			}
 		}
-	case types.Attacking:
+
+	case types.DefensiveStrategy:
 
 	}
 	return true, ""
