@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+body {
+  @apply bg-gray-100 text-gray-900; /* ljusgrå bakgrund, mörk text */
+}
+
+/* Scrollbar för Webkit-browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;              /* bredd */
+  height: 8px;             /* höjd vid horizontal */
+}
+
+::-webkit-scrollbar-track {
+  background: #e5e7eb;     /* bg-gray-200 */
+  border-radius: 9999px;   /* rund */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9333ea;     /* lila (bg-purple-600) */
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7e22ce;     /* mörkare lila */
+}
