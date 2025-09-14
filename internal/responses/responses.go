@@ -11,3 +11,9 @@ type PlayerResponse struct {
 type CardsResponse struct {
 	Items []types.Card `json:"items"`
 }
+
+type GenerateDeckResponse struct {
+	Deck         types.Deck `json:"deck"`
+	Message      string     `json:"message"`
+	OptimizedFor string     `json:"optimized_for"`
+}
