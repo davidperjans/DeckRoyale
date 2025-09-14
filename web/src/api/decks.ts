@@ -7,7 +7,7 @@ export const getDecks = async () => {
 };
 
 // Skapa nytt deck
-export const createDeck = async (deck: { name: string; cards: number[] }) => {
-  const res = await api.post("/decks", deck);
+export const createDeck = async (deck: { tag: string; strategy: string; preferredCards: string[] }) => {
+  const res = await api.post("/deck/generate", deck);
   return res.data;
 };
