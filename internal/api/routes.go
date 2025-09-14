@@ -16,6 +16,7 @@ func RegisterRoutes(r *gin.Engine, clashService clash.Service, aiService ai.Serv
 		v1.POST("/cards/sync", SyncCardsHandler(clashService, cardRepo))
 
 		v1.POST("/deck/generate", GenerateDeckHandler(clashService, aiService))
+		v1.POST("/deck/review", ReviewDeckHandler(clashService, aiService))
 
 	}
 }

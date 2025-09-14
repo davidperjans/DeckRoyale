@@ -271,6 +271,7 @@ const DeckBuilder: React.FC = () => {
                   <X className="h-4 w-4" />
                   Clear
                 </button>
+                
               </div>
               
               <div className="grid grid-cols-4 gap-3">

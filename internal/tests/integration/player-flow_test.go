@@ -8,6 +8,7 @@ import (
 
 	"github.com/davidperjans/deckroyale/internal/api"
 	"github.com/davidperjans/deckroyale/internal/middleware"
+	"github.com/davidperjans/deckroyale/internal/responses"
 	"github.com/davidperjans/deckroyale/internal/types"
 	"github.com/gin-gonic/gin"
 )
@@ -38,8 +39,12 @@ func (f *fakeClashService) GetPlayer(playerTag string) (*types.User, error) {
 
 type fakeAI struct{}
 
-func (f *fakeAI) GenerateDeck(cards []types.Card, strategy types.StrategyName, preferred []string) (types.Deck, error) {
-	return types.Deck{Cards: cards[:8]}, nil
+func (f *fakeAI) GenerateDeck(cards []types.Card, strategy types.StrategyName, preferred []string) (*responses.GenerateDeckResponse, error) {
+	return &responses.GenerateDeckResponse{}, nil
+}
+
+func (f *fakeAI) ReviewDeck([]types.Card, types.StrategyName, []string) (*types.Review, error) {
+	return &types.Review{}, nil
 }
 
 type fakeCardRepository struct{}

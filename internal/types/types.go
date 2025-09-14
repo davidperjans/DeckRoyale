@@ -48,9 +48,13 @@ type Card struct {
 //
 
 type Deck struct {
-	Cards     []Card       `json:"cards"`
-	Strategy  StrategyName `json:"strategy,omitempty"`
-	AvgElixir float64      `json:"avgElixir,omitempty"`
+	Cards           []Card       `json:"cards"`
+	Strategy        StrategyName `json:"strategy,omitempty"`
+	AvgElixir       float64      `json:"avgElixir,omitempty"`
+	StrategyMessage string       `json:"strategyMessage,omitempty"`
+	Strengths       []string     `json:"strengths"`
+	Weaknesses      []string     `json:"weaknesses"`
+	PlaystyleTips   []string     `json:"playstyle_tips"`
 }
 
 ///
@@ -127,11 +131,21 @@ const (
 ///
 ///
 
-type DeckTemplate struct {
-	RequiredRoles     map[CardRole]int `json:"required_roles"`
-	PreferredRoles    map[CardRole]int `json:"preferred_roles"`
-	ForbiddenRoles    []CardRole       `json:"forbidden_roles"`
-	ElixirRange       [2]float64       `json:"elixir_range"`
-	MaxHighCost       int              `json:"max_high_cost"`
-	RequiredSynergies [][]string       `json:"required_synergies"`
+type PromptTemplate struct {
+	SystemMessage    string `json:"system_message"`
+	KnowledgeBase    string `json:"knowledge_base"`
+	AnalysisRules    string `json:"analysis_rules"`
+	RatingGuidelines string `json:"rating_guidelines"`
+	OutputFormat     string `json:"output_format"`
+	Instructions     string `json:"instructions"`
+}
+
+///
+///
+///
+
+type Review struct {
+	Deck          Deck    `json:"deck"`
+	Rating        float64 `json:"rating"` // ex 7.3/10
+	ReviewMessage string  `json:"review_message"`
 }

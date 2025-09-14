@@ -9,12 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GenerateDeckHandler(clashService clash.Service, aiService ai.Service) gin.HandlerFunc {
+func ReviewDeckHandler(clashService clash.Service, aiService ai.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request struct {
-			Tag       string             `json:"tag"`
 			Strategy  types.StrategyName `json:"strategy"`
-			Preferred []string           `json:"preferredCards"`
+			UserCards []string           `json:"user_cards"`
 		}
 
 		if err := c.ShouldBindJSON(&request); err != nil {
@@ -22,18 +21,18 @@ func GenerateDeckHandler(clashService clash.Service, aiService ai.Service) gin.H
 			return
 		}
 
-		player, err := clashService.GetPlayer(request.Tag)
+		allCards, err := clashService.GetCards()
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		deck, err := aiService.GenerateDeck(player.Cards, request.Strategy, request.Preferred)
+		review, err := aiService.ReviewDeck(allCards, request.Strategy, request.UserCards)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.IndentedJSON(http.StatusOK, deck)
+		c.IndentedJSON(http.StatusOK, review)
 	}
 }
