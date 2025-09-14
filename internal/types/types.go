@@ -7,12 +7,17 @@ package types
 //
 
 type User struct {
-	Tag      string `json:"tag"`
-	Name     string `json:"name"`
-	Level    int    `json:"expLevel"`
-	Trophies int    `json:"trophies"`
-	Clan     Clan   `json:"clan"`
-	Cards    []Card `json:"cards"`
+	Tag            string `json:"tag"`
+	Name           string `json:"name"`
+	Level          int    `json:"expLevel"`
+	Trophies       int    `json:"trophies"`
+	BestTrophies   int    `json:"bestTrophies"`
+	Wins           int    `json:"wins"`
+	Losses         int    `json:"losses"`
+	BattleCount    int    `json:"battleCount"`
+	ThreeCrownWins int    `json:"threeCrownWins"`
+	Clan           Clan   `json:"clan"`
+	Cards          []Card `json:"cards"`
 }
 
 //
