@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { getPlayer } from "../api/player";
 import { createDeck } from "../api/decks";
 import {
@@ -27,6 +27,96 @@ const strategyDescriptions: Record<string, string> = {
   hybrid: "Adaptable strategy combining multiple playstyles",
 };
 
+// Memoized Card Component
+const CardItem = React.memo(({ card, onSelect }: { card: any; onSelect: (card: any) => void }) => (
+  <div
+    onClick={() => onSelect(card)}
+    className="border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center cursor-pointer hover:border-purple-300 hover:bg-purple-50 transition-all group"
+  >
+    <img
+      src={card.iconUrls?.medium}
+      alt={card.name}
+      className="w-16 h-16 mb-2 object-contain group-hover:scale-110 transition-transform"
+      loading="lazy"
+    />
+    <p className="text-sm font-semibold text-center text-gray-800 mb-1">
+      {card.name}
+    </p>
+    <div className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full mb-2">
+      <p className="text-xs font-medium">Elixir: {card.elixirCost}⚡</p>
+    </div>
+    <div className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+      <p className="text-xs font-medium">Level: {card.level}</p>
+    </div>
+  </div>
+));
+
+// Virtual Grid Component for better performance
+const VirtualCardGrid = React.memo(({ 
+  cards, 
+  onCardSelect, 
+  itemsPerRow = 6,
+  itemHeight = 200,
+  containerHeight = 400 
+}: {
+  cards: any[];
+  onCardSelect: (card: any) => void;
+  itemsPerRow?: number;
+  itemHeight?: number;
+  containerHeight?: number;
+}) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  
+  const totalRows = Math.ceil(cards.length / itemsPerRow);
+  const visibleStart = Math.floor(scrollTop / itemHeight);
+  const visibleEnd = Math.min(visibleStart + Math.ceil(containerHeight / itemHeight) + 1, totalRows);
+  
+  const visibleItems = useMemo(() => {
+    const items = [];
+    for (let rowIndex = visibleStart; rowIndex < visibleEnd; rowIndex++) {
+      const startIndex = rowIndex * itemsPerRow;
+      const endIndex = Math.min(startIndex + itemsPerRow, cards.length);
+      const rowCards = cards.slice(startIndex, endIndex);
+      items.push({ rowIndex, cards: rowCards });
+    }
+    return items;
+  }, [cards, visibleStart, visibleEnd, itemsPerRow]);
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return (
+    <div 
+      className="overflow-y-auto"
+      style={{ height: containerHeight }}
+      onScroll={handleScroll}
+    >
+      <div style={{ height: totalRows * itemHeight, position: 'relative' }}>
+        {visibleItems.map(({ rowIndex, cards: rowCards }) => (
+          <div
+            key={rowIndex}
+            className="grid gap-4"
+            style={{
+              position: 'absolute',
+              top: rowIndex * itemHeight,
+              left: 0,
+              right: 0,
+              gridTemplateColumns: `repeat(${itemsPerRow}, minmax(0, 1fr))`,
+              height: itemHeight,
+              padding: '0 24px'
+            }}
+          >
+            {rowCards.map((card: any) => (
+              <CardItem key={card.id} card={card} onSelect={onCardSelect} />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
 const DeckBuilder: React.FC = () => {
   const [tag, setTag] = useState("");
   const [playerData, setPlayerData] = useState<any | null>(null);
@@ -40,7 +130,19 @@ const DeckBuilder: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSearch = async () => {
+  // Memoized filtered cards with debounced search
+  const filteredCards = useMemo(() => {
+    if (!playerData?.cards) return [];
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    if (!searchLower) return playerData.cards;
+    
+    return playerData.cards.filter((card: any) =>
+      card.name.toLowerCase().includes(searchLower)
+    );
+  }, [playerData?.cards, searchTerm]);
+
+  const handleSearch = useCallback(async () => {
     if (!tag.trim()) return;
     setLoading(true);
     try {
@@ -51,9 +153,9 @@ const DeckBuilder: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tag]);
 
-  const handleGenerateDeck = async () => {
+  const handleGenerateDeck = useCallback(async () => {
     if (!playerData || !strategy) return;
     
     setLoading(true);
@@ -96,32 +198,38 @@ const DeckBuilder: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [playerData, strategy, preferredCards]);
 
-  const handleOpenModal = (slotIndex: number) => {
+  const handleOpenModal = useCallback((slotIndex: number) => {
     setSelectedSlot(slotIndex);
+    setSearchTerm(""); // Reset search when opening modal
     setShowModal(true);
-  };
+  }, []);
 
-  const handleSelectCard = (card: any) => {
+  const handleSelectCard = useCallback((card: any) => {
     if (selectedSlot !== null) {
       const updated = [...preferredCards];
       updated[selectedSlot] = card;
       setPreferredCards(updated);
     }
     setShowModal(false);
-  };
+  }, [selectedSlot, preferredCards]);
 
-  const handleRemoveCard = (slotIndex: number) => {
+  const handleRemoveCard = useCallback((slotIndex: number) => {
     const updated = [...preferredCards];
     updated[slotIndex] = null;
     setPreferredCards(updated);
-  };
+  }, [preferredCards]);
 
-  const filteredCards =
-    playerData?.cards?.filter((card: any) =>
-      card.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+  const handleCloseModal = useCallback(() => {
+    setShowModal(false);
+    setSearchTerm(""); // Reset search when closing
+  }, []);
+
+  // Debounced search input handler
+  const handleSearchInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
@@ -287,6 +395,7 @@ const DeckBuilder: React.FC = () => {
                           src={card.iconUrls?.medium}
                           alt={card.name}
                           className="w-12 h-12 object-contain"
+                          loading="lazy"
                         />
                         <button
                           onClick={(e) => {
@@ -386,6 +495,7 @@ const DeckBuilder: React.FC = () => {
                             src={card.iconUrl || card.iconUrls?.medium}
                             alt={card.name}
                             className="w-12 h-12 object-contain"
+                            loading="lazy"
                           />
                         ) : (
                           <span className="text-xs text-center px-1 text-purple-700 font-medium">
@@ -438,7 +548,7 @@ const DeckBuilder: React.FC = () => {
         )}
       </div>
 
-      {/* Card Selection Modal */}
+      {/* Optimized Card Selection Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
@@ -447,10 +557,12 @@ const DeckBuilder: React.FC = () => {
                 <div className="bg-gradient-to-br from-purple-500 to-indigo-600 p-2 rounded-lg">
                   <Plus className="text-white h-5 w-5" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-800">Select a Card</h2>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Select a Card ({filteredCards.length} cards)
+                </h2>
               </div>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={handleCloseModal}
                 className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-all"
               >
                 <X className="h-6 w-6" />
@@ -463,35 +575,21 @@ const DeckBuilder: React.FC = () => {
                   type="text"
                   placeholder="Search cards..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={handleSearchInput}
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 pl-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all"
                 />
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4">
-                {filteredCards.map((card: any) => (
-                  <div
-                    key={card.id}
-                    onClick={() => handleSelectCard(card)}
-                    className="border-2 border-gray-200 rounded-xl p-3 flex flex-col items-center cursor-pointer hover:border-purple-300 hover:bg-purple-50 transition-all group"
-                  >
-                    <img
-                      src={card.iconUrls?.medium}
-                      alt={card.name}
-                      className="w-16 h-16 mb-2 object-contain group-hover:scale-110 transition-transform"
-                    />
-                    <p className="text-sm font-semibold text-center text-gray-800 mb-1">
-                      {card.name}
-                    </p>
-                    <div className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-                      <p className="text-xs font-medium">{card.elixirCost} ⚡</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="flex-1 min-h-0">
+              <VirtualCardGrid
+                cards={filteredCards}
+                onCardSelect={handleSelectCard}
+                itemsPerRow={6}
+                itemHeight={200}
+                containerHeight={400}
+              />
             </div>
           </div>
         </div>
