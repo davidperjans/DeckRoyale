@@ -11,3 +11,8 @@ export const createDeck = async (deck: { tag: string; strategy: string; preferre
   const res = await api.post("/deck/generate", deck);
   return res.data;
 };
+
+export const reviewDeck = async (body: { strategy: string; user_cards: string[] }) => {
+  const res = await api.post("/deck/review", body);
+  return res.data;
+};
