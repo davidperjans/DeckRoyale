@@ -456,19 +456,19 @@ const DeckBuilder: React.FC = () => {
                 <ul className="text-sm text-gray-600 space-y-2">
                   <li className="flex items-start gap-2">
                     <span className="text-purple-500 font-bold">•</span>
-                    Balance fast cycle cards with strong win-conditions
+                    Include at least one reliable win condition to secure victories
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-500 font-bold">•</span>
-                    Always keep at least one cheap defensive card
+                    Keep versatile spells to handle both swarms and high-HP troops
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-500 font-bold">•</span>
-                    Cover common threats with spells like Fireball or Zap
+                    Adapt your deck to counter the current meta and common threats
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-purple-500 font-bold">•</span>
-                    Include at least one reliable anti-air option
+                    Always manage your elixir wisely
                   </li>
                 </ul>
               </div>

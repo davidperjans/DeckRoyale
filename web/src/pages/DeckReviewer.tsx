@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   X,
@@ -7,6 +7,9 @@ import {
   Star,
   Info,
 } from "lucide-react";
+import axios from "axios";
+import { getCards } from "../api/cards";
+import { reviewDeck } from "../api/decks"
 
 // Strategy descriptions
 const strategyDescriptions: Record<string, string> = {
@@ -20,6 +23,8 @@ const strategyDescriptions: Record<string, string> = {
   hybrid: "Adaptable strategy combining multiple playstyles",
 };
 
+const API_URL = "http://localhost:8080/api/v1";
+
 const DeckReviewer: React.FC = () => {
   const [preferredCards, setPreferredCards] = useState<(any | null)[]>(
     Array(8).fill(null)
@@ -28,7 +33,26 @@ const DeckReviewer: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [review, setReview] = useState<string | null>(null);
+  const [review, setReview] = useState<any | null>(null);
+  const [allCards, setAllCards] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // === Hämta alla kort från backend ===
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        const data = await getCards();
+        setAllCards(data);
+      } catch (err) {
+        console.error("Failed to fetch cards:", err);
+      }
+    };
+    fetchCards();
+  }, []);
+
+  const filteredCards = allCards.filter((card) =>
+    card.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleOpenModal = (slotIndex: number) => {
     setSelectedSlot(slotIndex);
@@ -50,26 +74,27 @@ const DeckReviewer: React.FC = () => {
     setPreferredCards(updated);
   };
 
-  const handleReviewDeck = () => {
-    // placeholder – sen anrop till backend
+  const handleReviewDeck = useCallback(async () => {
     if (!strategy || preferredCards.every((c) => !c)) {
-      setReview("Please select a strategy and fill your deck before reviewing.");
-    } else {
-      setReview("Deck review will appear here once backend is connected!");
+      setReview({ review_message: "Please select a strategy and fill your deck before reviewing." });
+      return;
     }
-  };
 
-  // mock all cards list tills backend finns
-  const mockCards = [
-    { id: 1, name: "Knight", elixirCost: 3, iconUrls: { medium: "https://royaleapi.github.io/cr-api-assets/cards-150/knight.png" } },
-    { id: 2, name: "Archers", elixirCost: 3, iconUrls: { medium: "https://royaleapi.github.io/cr-api-assets/cards-150/archers.png" } },
-    { id: 3, name: "Fireball", elixirCost: 4, iconUrls: { medium: "https://royaleapi.github.io/cr-api-assets/cards-150/fireball.png" } },
-    // lägg till fler mockkort om du vill
-  ];
-
-  const filteredCards = mockCards.filter((card) =>
-    card.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    setLoading(true);
+    try {
+      const body = {
+        strategy,
+        user_cards: preferredCards.filter((c) => c).map((c) => c.name),
+      };
+      const data = await reviewDeck(body);
+      setReview(data); // hela svaret
+    } catch (err) {
+      console.error("Review failed", err);
+      setReview({ review_message: "Something went wrong when reviewing the deck." });
+    } finally {
+      setLoading(false);
+    }
+  }, [strategy, preferredCards]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
@@ -112,16 +137,18 @@ const DeckReviewer: React.FC = () => {
               placeholder="Paste deck link..."
               className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             />
-            <button
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all"
-            >
+            <button className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:from-indigo-700 hover:to-purple-700 transition-all">
               Import
             </button>
           </div>
-          <p className="text-xs text-gray-500 flex items-center gap-1 mb-4">
-            <Info className="h-4 w-4 text-indigo-500" />
-            Paste a Clash Royale deck link like: 
-            <span className="italic"> https://link.clashroyale.com/en/?clashroyale://copyDeck?deck=...</span>
+          <p className="text-xs text-gray-500 mb-4">
+            <span className="flex items-center gap-1 mb-1">
+              <Info className="h-4 w-4 text-indigo-500" />
+              Paste a Clash Royale deck link like:
+            </span>
+            <span className="italic block">
+              https://link.clashroyale.com/en/?clashroyale://copyDeck?deck=...
+            </span>
           </p>
 
           {/* Deck slots */}
@@ -168,7 +195,7 @@ const DeckReviewer: React.FC = () => {
             </div>
             <h2 className="text-xl font-bold text-gray-800">Choose Strategy</h2>
           </div>
-          
+
           <select
             value={strategy}
             onChange={(e) => setStrategy(e.target.value)}
@@ -181,7 +208,7 @@ const DeckReviewer: React.FC = () => {
               </option>
             ))}
           </select>
-          
+
           {strategy && (
             <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100 rounded-xl p-4 mb-4">
               <p className="text-sm text-purple-700 font-medium italic">
@@ -189,7 +216,7 @@ const DeckReviewer: React.FC = () => {
               </p>
             </div>
           )}
-          
+
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <h3 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
               <Plus className="h-4 w-4 text-yellow-500" />
@@ -198,15 +225,19 @@ const DeckReviewer: React.FC = () => {
             <ul className="text-sm text-gray-600 space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-purple-500 font-bold">•</span>
-                Balance fast cycle cards with strong win-conditions
+                Include at least one reliable win condition to secure victories
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500 font-bold">•</span>
-                Always keep at least one cheap defensive card
+                Keep versatile spells to handle both swarms and high-HP troops
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-purple-500 font-bold">•</span>
-                Cover common threats with spells like Fireball or Zap
+                Adapt your deck to counter the current meta and common threats
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-purple-500 font-bold">•</span>
+                Always manage your elixir wisely
               </li>
             </ul>
           </div>
@@ -221,20 +252,79 @@ const DeckReviewer: React.FC = () => {
             <h2 className="text-xl font-bold text-gray-800">Deck Review</h2>
           </div>
 
-          <div className="flex-1 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-400">
-            {review ? (
-              <p className="text-gray-700">{review}</p>
-            ) : (
-              <span>No review yet</span>
-            )}
-          </div>
+          <div className="flex-1 border border-dashed border-gray-300 rounded-xl p-6 text-gray-700 overflow-y-auto">
+  {!review ? (
+    <span className="text-gray-400">No review yet</span>
+  ) : (
+    <div className="space-y-4 text-left">
+      {/* Rating */}
+      {"rating" in review && (
+        <p className="text-lg font-bold text-indigo-600">
+          Rating: {review.rating}/10
+        </p>
+      )}
+
+      {/* Strategy */}
+      {review.deck?.strategyMessage && (
+        <div>
+          <h3 className="font-semibold text-gray-800 mb-1">Strategy</h3>
+          <p className="text-sm">{review.deck.strategyMessage}</p>
+        </div>
+      )}
+
+      {/* Strengths */}
+      {review.deck?.strengths && (
+        <div>
+          <h3 className="font-semibold text-green-600 mb-1">Strengths</h3>
+          <ul className="list-disc list-inside text-sm space-y-1">
+            {review.deck.strengths.map((s: string, i: number) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Weaknesses */}
+      {review.deck?.weaknesses && (
+        <div>
+          <h3 className="font-semibold text-red-600 mb-1">Weaknesses</h3>
+          <ul className="list-disc list-inside text-sm space-y-1">
+            {review.deck.weaknesses.map((w: string, i: number) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Playstyle Tips */}
+      {review.deck?.playstyle_tips && (
+        <div>
+          <h3 className="font-semibold text-indigo-600 mb-1">Playstyle Tips</h3>
+          <ul className="list-disc list-inside text-sm space-y-1">
+            {review.deck.playstyle_tips.map((t: string, i: number) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Review Message */}
+      {review.review_message && (
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3">
+          <p className="text-sm italic">{review.review_message}</p>
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
 
           <button
             onClick={handleReviewDeck}
-            className="mt-6 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg"
+            disabled={loading}
+            className="mt-6 w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg disabled:opacity-50"
           >
-            <Sparkles className="h-5 w-5 mr-2 inline-block" />
-            Review Deck
+            {loading ? "Reviewing..." : "Review Deck"}
           </button>
         </div>
       </div>
